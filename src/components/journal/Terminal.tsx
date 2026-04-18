@@ -64,9 +64,11 @@ export function Terminal() {
   };
 
   const addEntry = () => {
+    console.log("[ICT] addEntry clicked");
     const e = newEntry(asset === "ALL" ? "XAUUSD" : asset);
-    setEntries((p) => [...p, e]);
+    setEntries((p) => { console.log("[ICT] setEntries", p.length, "->", p.length + 1); return [...p, e]; });
     setEditing(e);
+    console.log("[ICT] setEditing", e.id);
     setTimeout(jumpRight, 100);
   };
 
