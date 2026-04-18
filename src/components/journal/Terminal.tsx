@@ -85,12 +85,18 @@ export function Terminal() {
             <span className="text-[10px] text-muted-foreground tracking-widest">// v1.0 TERMINAL</span>
           </div>
 
-          <button onClick={addEntry}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold tracking-widest bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/60 rounded hover:bg-neon-cyan/30 text-glow-cyan transition-all">
-            <Plus className="w-3.5 h-3.5" /> ADD DAY
+          <button
+            type="button"
+            onClick={addEntry}
+            className="relative flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.2em] bg-gradient-to-r from-neon-cyan/40 to-neon-cyan/20 text-neon-cyan border-2 border-neon-cyan rounded hover:from-neon-cyan/60 hover:to-neon-cyan/30 text-glow-cyan transition-all shadow-[0_0_18px_oklch(0.85_0.18_200/0.4)] hover:shadow-[0_0_28px_oklch(0.85_0.18_200/0.7)]"
+          >
+            <Plus className="w-4 h-4" strokeWidth={3} /> ADD DAY
           </button>
 
-          <div className="flex items-center gap-1 ml-2">
+          <div className="h-6 w-px bg-terminal-border" />
+
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="text-[9px] text-muted-foreground tracking-widest mr-1">ASSET:</span>
             <button onClick={() => setAsset("ALL")}
               className={`px-2 py-1 text-[10px] font-bold tracking-widest rounded border transition-all ${asset === "ALL" ? "bg-neon-amber/20 text-neon-amber border-neon-amber/60" : "border-terminal-border text-muted-foreground hover:text-foreground"}`}>
               ALL
