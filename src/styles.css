@@ -63,8 +63,29 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  /* Deep Navy Terminal */
+  --background: oklch(0.16 0.02 250);
+  --foreground: oklch(0.95 0.01 250);
+  --terminal-bg: oklch(0.13 0.02 250);
+  --terminal-panel: oklch(0.20 0.025 250 / 0.6);
+  --terminal-border: oklch(0.35 0.04 240 / 0.4);
+  --neon-cyan: oklch(0.85 0.18 200);
+  --neon-green: oklch(0.82 0.24 145);
+  --neon-red: oklch(0.68 0.24 25);
+  --neon-amber: oklch(0.82 0.18 75);
+  --bias-bull: oklch(0.78 0.20 150);
+  --bias-bear: oklch(0.65 0.24 25);
+  --bias-cons: oklch(0.65 0.02 250);
+  --color-terminal-bg: var(--terminal-bg);
+  --color-terminal-panel: var(--terminal-panel);
+  --color-terminal-border: var(--terminal-border);
+  --color-neon-cyan: var(--neon-cyan);
+  --color-neon-green: var(--neon-green);
+  --color-neon-red: var(--neon-red);
+  --color-neon-amber: var(--neon-amber);
+  --color-bias-bull: var(--bias-bull);
+  --color-bias-bear: var(--bias-bear);
+  --color-bias-cons: var(--bias-cons);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
