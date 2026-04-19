@@ -19,6 +19,7 @@ export function PasteSlot({ label, image, onChange, focused, onFocus, className,
   const [drag, setDrag] = useState(false);
   const [busy, setBusy] = useState(false);
   const [displayUrl, setDisplayUrl] = useState<string>("");
+  const [zoom, setZoom] = useState(false);
 
   // Resolve storage path -> signed URL (or pass through legacy data URL)
   useEffect(() => {
