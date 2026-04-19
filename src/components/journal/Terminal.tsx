@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayoutDashboard, Crosshair, FileText, LogOut, Terminal as TerminalIcon, Construction } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthGate } from "./AuthGate";
 import { JournalView } from "./JournalView";
 import { TradeLog } from "./TradeLog";
+import { onPageChange, type PageId } from "@/lib/nav-bus";
 
 type Page = "dashboard" | "bias" | "trades";
 
@@ -15,6 +16,8 @@ const NAV: { id: Page; label: string; icon: React.ComponentType<{ className?: st
 
 function Shell() {
   const [page, setPage] = useState<Page>("bias");
+
+  useEffect(() => onPageChange((p) => setPage(p as PageId as Page)), []);
 
   const signOut = async () => { await supabase.auth.signOut(); };
 
