@@ -138,13 +138,22 @@ export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
             </div>
           </Field>
 
-          <Field label="Bias entry ID (optional)">
-            <Input
+          <Field label={`Bias entry (${t.symbol})`}>
+            <select
               value={t.biasEntryId ?? ""}
               onChange={(e) => update({ biasEntryId: e.target.value || undefined })}
-              placeholder="link to bias entry"
-              className="bg-black/40 border-terminal-border"
-            />
+              className="h-9 w-full rounded-md bg-black/40 border border-terminal-border px-2 text-sm"
+            >
+              <option value="">— none —</option>
+              {filteredBias.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {ddmm(b.date)} — {b.dailyBias.charAt(0).toUpperCase() + b.dailyBias.slice(1)}
+                </option>
+              ))}
+              {filteredBias.length === 0 && (
+                <option value="" disabled>No {t.symbol} entries</option>
+              )}
+            </select>
           </Field>
 
           <Field label="Gross PnL">
