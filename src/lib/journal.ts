@@ -131,7 +131,7 @@ export function biasBgHex(b: Bias) {
   return "#FFFFFF";
 }
 
-export function biasStyle(b: Bias): React.CSSProperties {
+export function biasStyle(b: Bias): CSSProperties {
   return {
     backgroundColor: biasBgHex(b),
     color: "#000",
