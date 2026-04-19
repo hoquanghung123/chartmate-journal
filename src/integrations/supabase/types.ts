@@ -65,6 +65,63 @@ export type Database = {
         }
         Relationships: []
       }
+      trades: {
+        Row: {
+          actual_rr: number
+          after_img: string | null
+          before_img: string | null
+          bias_entry_id: string | null
+          created_at: string
+          entry_time: string
+          fees: number
+          gross_pnl: number
+          id: string
+          max_rr: number
+          net_pnl: number
+          notes: string | null
+          side: Database["public"]["Enums"]["trade_side"]
+          symbol: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_rr?: number
+          after_img?: string | null
+          before_img?: string | null
+          bias_entry_id?: string | null
+          created_at?: string
+          entry_time?: string
+          fees?: number
+          gross_pnl?: number
+          id?: string
+          max_rr?: number
+          net_pnl?: number
+          notes?: string | null
+          side?: Database["public"]["Enums"]["trade_side"]
+          symbol: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_rr?: number
+          after_img?: string | null
+          before_img?: string | null
+          bias_entry_id?: string | null
+          created_at?: string
+          entry_time?: string
+          fees?: number
+          gross_pnl?: number
+          id?: string
+          max_rr?: number
+          net_pnl?: number
+          notes?: string | null
+          side?: Database["public"]["Enums"]["trade_side"]
+          symbol?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -74,6 +131,7 @@ export type Database = {
     }
     Enums: {
       bias_type: "bullish" | "bearish" | "consolidation"
+      trade_side: "buy" | "sell"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -202,6 +260,7 @@ export const Constants = {
   public: {
     Enums: {
       bias_type: ["bullish", "bearish", "consolidation"],
+      trade_side: ["buy", "sell"],
     },
   },
 } as const
