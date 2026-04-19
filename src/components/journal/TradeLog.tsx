@@ -9,6 +9,7 @@ import {
   upsertTrade,
   type Trade,
 } from "@/lib/trades";
+import { focusBiasEntry, navigateToPage } from "@/lib/nav-bus";
 import { TradeModal } from "./TradeModal";
 import { TradeImageThumb } from "./TradeImageThumb";
 import { toast } from "sonner";
@@ -188,7 +189,11 @@ export function TradeLog() {
                         </span>
                         {t.biasEntryId && (
                           <button
-                            onClick={(e) => { e.stopPropagation(); toast.info(`Bias: ${t.biasEntryId}`); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigateToPage("bias");
+                              setTimeout(() => focusBiasEntry(t.biasEntryId!), 50);
+                            }}
                             className="text-muted-foreground hover:text-[#48C0D8]"
                             title="Open bias entry"
                           >
