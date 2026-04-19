@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, Trash2, Save } from "lucide-react";
 import type { Bias, DayEntry, Session } from "@/lib/journal";
-import { biasColor, weekdayOf } from "@/lib/journal";
+import { biasStyle, biasLabel, weekdayOf } from "@/lib/journal";
 import { useSymbols } from "@/lib/symbols";
 import { PasteSlot } from "./PasteSlot";
 
