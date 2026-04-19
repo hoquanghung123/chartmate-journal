@@ -94,7 +94,17 @@ export function PasteSlot({ label, image, onChange, focused, onFocus, className,
       className={`relative group rounded-md overflow-hidden border border-terminal-border bg-terminal-bg/60 transition-all cursor-pointer outline-none ${focused ? "neon-focus" : ""} ${drag ? "neon-focus" : ""} ${className ?? ""}`}
     >
       {displayUrl ? (
-        <img src={displayUrl} alt={label} className="w-full h-full object-cover" />
+        <>
+          <img src={displayUrl} alt={label} className="w-full h-full object-cover" />
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setZoom(true); }}
+            title="Zoom"
+            className="absolute top-1 right-7 w-5 h-5 rounded bg-black/70 border border-terminal-border text-muted-foreground hover:text-neon-cyan hover:border-neon-cyan opacity-0 group-hover:opacity-100 transition flex items-center justify-center z-10"
+          >
+            <Maximize2 className="w-3 h-3" />
+          </button>
+        </>
       ) : (
         <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-muted-foreground/70 text-[10px] uppercase tracking-wider">
           <ImageIcon className="w-5 h-5 opacity-50" />
@@ -111,6 +121,13 @@ export function PasteSlot({ label, image, onChange, focused, onFocus, className,
         {label}
       </div>
       {children}
+      {zoom && displayUrl && (
+        <Lightbox
+          images={[{ url: displayUrl, caption: label }]}
+          index={0}
+          onClose={() => setZoom(false)}
+        />
+      )}
     </div>
   );
 }
