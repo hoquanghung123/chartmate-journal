@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Crosshair, FileText, LogOut, Terminal as TerminalIcon, Construction } from "lucide-react";
+import { LayoutDashboard, Crosshair, FileText, LogOut, Terminal as TerminalIcon, Construction, Settings } from "lucide-react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthGate } from "./AuthGate";
 import { JournalView } from "./JournalView";
 import { TradeLog } from "./TradeLog";
+import { ManageAssetsModal } from "./ManageAssetsModal";
 import { onPageChange, type PageId } from "@/lib/nav-bus";
 
 type Page = "dashboard" | "bias" | "trades";
@@ -14,8 +16,13 @@ const NAV: { id: Page; label: string; icon: React.ComponentType<{ className?: st
   { id: "trades", label: "Trade Log", icon: FileText },
 ];
 
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { refetchOnWindowFocus: false } },
+});
+
 function Shell() {
   const [page, setPage] = useState<Page>("bias");
+  const [assetsOpen, setAssetsOpen] = useState(false);
 
   useEffect(() => onPageChange((p) => setPage(p as PageId as Page)), []);
 
@@ -57,7 +64,13 @@ function Shell() {
           })}
         </nav>
 
-        <div className="p-3 border-t border-terminal-border">
+        <div className="p-3 border-t border-terminal-border space-y-1">
+          <button
+            onClick={() => setAssetsOpen(true)}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-bold tracking-widest border border-terminal-border text-muted-foreground hover:text-neon-cyan hover:border-neon-cyan/60 transition-all"
+          >
+            <Settings className="w-3.5 h-3.5" /> MANAGE ASSETS
+          </button>
           <button
             onClick={signOut}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-bold tracking-widest border border-terminal-border text-muted-foreground hover:text-neon-red hover:border-neon-red/60 transition-all"
@@ -73,6 +86,8 @@ function Shell() {
         {page === "dashboard" && <UnderConstruction title="DASHBOARD" />}
         {page === "trades" && <TradeLog />}
       </div>
+
+      <ManageAssetsModal open={assetsOpen} onClose={() => setAssetsOpen(false)} />
     </div>
   );
 }
@@ -90,5 +105,9 @@ function UnderConstruction({ title }: { title: string }) {
 }
 
 export function Terminal() {
-  return <AuthGate>{() => <Shell />}</AuthGate>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthGate>{() => <Shell />}</AuthGate>
+    </QueryClientProvider>
+  );
 }

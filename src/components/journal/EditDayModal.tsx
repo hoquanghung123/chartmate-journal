@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { X, Trash2, Save } from "lucide-react";
 import type { Bias, DayEntry, Session } from "@/lib/journal";
-import { ASSETS, biasColor, weekdayOf } from "@/lib/journal";
+import { biasColor, weekdayOf } from "@/lib/journal";
+import { useSymbols } from "@/lib/symbols";
 import { PasteSlot } from "./PasteSlot";
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 const BIASES: Bias[] = ["bullish", "bearish", "consolidation"];
 
 export function EditDayModal({ entry, onSave, onDelete, onClose }: Props) {
+  const { data: symbols = [] } = useSymbols();
+  const ASSETS = symbols.map((s) => s.name);
   const [draft, setDraft] = useState<DayEntry>(entry);
   const [focusKey, setFocusKey] = useState<string>("weekly");
   const [session, setSession] = useState<Session>("ASIA");
