@@ -88,8 +88,8 @@ export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl bg-[#0D1117] border-terminal-border text-foreground">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 bg-[#0D1117] border-terminal-border text-foreground flex flex-col overflow-hidden">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-terminal-border shrink-0">
           <DialogTitle className="text-neon-cyan tracking-[0.2em] text-sm font-bold flex items-center gap-3">
             TRADE ENTRY
             <span className={`px-2 py-0.5 rounded border text-[10px] tracking-widest ${outcomeStyle[outcome.color]}`}>
@@ -98,137 +98,148 @@ export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Entry time">
-            <Input
-              type="datetime-local"
-              value={dtLocal}
-              onChange={(e) => update({ entryTime: new Date(e.target.value).toISOString() })}
-              className="bg-black/40 border-terminal-border"
-            />
-          </Field>
+        <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3">
+          {/* Row 1: Entry Time + Symbol */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Entry time">
+              <Input
+                type="datetime-local"
+                value={dtLocal}
+                onChange={(e) => update({ entryTime: new Date(e.target.value).toISOString() })}
+                className="h-8 bg-black/40 border-terminal-border"
+              />
+            </Field>
+            <Field label="Symbol">
+              <select
+                value={t.symbol}
+                onChange={(e) => update({ symbol: e.target.value })}
+                className="h-8 w-full rounded-md bg-black/40 border border-terminal-border px-2 text-sm"
+              >
+                {SYMBOLS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </Field>
+          </div>
 
-          <Field label="Symbol">
-            <select
-              value={t.symbol}
-              onChange={(e) => update({ symbol: e.target.value })}
-              className="h-9 w-full rounded-md bg-black/40 border border-terminal-border px-2 text-sm"
-            >
-              {SYMBOLS.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </Field>
+          {/* Row 2: Side + Bias Entry */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Side">
+              <div className="flex gap-2">
+                {(["buy", "sell"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => update({ side: s })}
+                    className={`flex-1 h-8 rounded-md border text-xs font-bold tracking-widest uppercase transition ${
+                      t.side === s
+                        ? s === "buy"
+                          ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400"
+                          : "bg-red-500/20 border-red-500/60 text-red-400"
+                        : "border-terminal-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <Field label={`Bias entry (${t.symbol})`}>
+              <select
+                value={t.biasEntryId ?? ""}
+                onChange={(e) => update({ biasEntryId: e.target.value || undefined })}
+                className="h-8 w-full rounded-md bg-black/40 border border-terminal-border px-2 text-sm"
+              >
+                <option value="">— none —</option>
+                {filteredBias.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {ddmm(b.date)} — {b.dailyBias.charAt(0).toUpperCase() + b.dailyBias.slice(1)}
+                  </option>
+                ))}
+                {filteredBias.length === 0 && (
+                  <option value="" disabled>No {t.symbol} entries</option>
+                )}
+              </select>
+            </Field>
+          </div>
 
-          <Field label="Side">
-            <div className="flex gap-2">
-              {(["buy", "sell"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => update({ side: s })}
-                  className={`flex-1 h-9 rounded-md border text-xs font-bold tracking-widest uppercase transition ${
-                    t.side === s
-                      ? s === "buy"
-                        ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400"
-                        : "bg-red-500/20 border-red-500/60 text-red-400"
-                      : "border-terminal-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </Field>
+          {/* Row 3: Gross + Fees + Net */}
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Gross PnL">
+              <Input
+                type="number" step="0.01"
+                value={t.grossPnl}
+                onChange={(e) => update({ grossPnl: Number(e.target.value) })}
+                className="h-8 bg-black/40 border-terminal-border"
+              />
+            </Field>
+            <Field label="Fees">
+              <Input
+                type="number" step="0.01"
+                value={t.fees}
+                onChange={(e) => update({ fees: Number(e.target.value) })}
+                className="h-8 bg-black/40 border-terminal-border"
+              />
+            </Field>
+            <Field label="Net PnL (auto)">
+              <Input
+                type="number" step="0.01"
+                value={t.netPnl}
+                onChange={(e) => update({ netPnl: Number(e.target.value) })}
+                className={`h-8 bg-black/40 border-terminal-border ${t.netPnl > 0 ? "text-emerald-400" : t.netPnl < 0 ? "text-red-400" : ""}`}
+              />
+            </Field>
+          </div>
 
-          <Field label={`Bias entry (${t.symbol})`}>
-            <select
-              value={t.biasEntryId ?? ""}
-              onChange={(e) => update({ biasEntryId: e.target.value || undefined })}
-              className="h-9 w-full rounded-md bg-black/40 border border-terminal-border px-2 text-sm"
-            >
-              <option value="">— none —</option>
-              {filteredBias.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {ddmm(b.date)} — {b.dailyBias.charAt(0).toUpperCase() + b.dailyBias.slice(1)}
-                </option>
-              ))}
-              {filteredBias.length === 0 && (
-                <option value="" disabled>No {t.symbol} entries</option>
-              )}
-            </select>
-          </Field>
+          {/* Row 4: Actual RR + Max RR */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Actual RR achieved">
+              <Input
+                type="number" step="0.01"
+                value={t.actualRr}
+                onChange={(e) => update({ actualRr: Number(e.target.value) })}
+                className="h-8 bg-black/40 border-terminal-border"
+              />
+            </Field>
+            <Field label="Max RR reached">
+              <Input
+                type="number" step="0.01"
+                value={t.maxRr}
+                onChange={(e) => update({ maxRr: Number(e.target.value) })}
+                className="h-8 bg-black/40 border-terminal-border"
+              />
+            </Field>
+          </div>
 
-          <Field label="Gross PnL">
-            <Input
-              type="number" step="0.01"
-              value={t.grossPnl}
-              onChange={(e) => update({ grossPnl: Number(e.target.value) })}
-              className="bg-black/40 border-terminal-border"
+          {/* Images */}
+          <div className="grid grid-cols-2 gap-3">
+            <PasteSlot
+              label="BEFORE"
+              image={t.beforeImg}
+              onChange={(p) => update({ beforeImg: p })}
+              focused={focused === "before"}
+              onFocus={() => setFocused("before")}
+              className="h-32"
             />
-          </Field>
-          <Field label="Fees">
-            <Input
-              type="number" step="0.01"
-              value={t.fees}
-              onChange={(e) => update({ fees: Number(e.target.value) })}
-              className="bg-black/40 border-terminal-border"
+            <PasteSlot
+              label="AFTER"
+              image={t.afterImg}
+              onChange={(p) => update({ afterImg: p })}
+              focused={focused === "after"}
+              onFocus={() => setFocused("after")}
+              className="h-32"
             />
-          </Field>
-          <Field label="Net PnL (auto)">
-            <Input
-              type="number" step="0.01"
-              value={t.netPnl}
-              onChange={(e) => update({ netPnl: Number(e.target.value) })}
-              className={`bg-black/40 border-terminal-border ${t.netPnl > 0 ? "text-emerald-400" : t.netPnl < 0 ? "text-red-400" : ""}`}
-            />
-          </Field>
-          <div />
+          </div>
 
-          <Field label="Actual RR achieved">
-            <Input
-              type="number" step="0.01"
-              value={t.actualRr}
-              onChange={(e) => update({ actualRr: Number(e.target.value) })}
-              className="bg-black/40 border-terminal-border"
-            />
-          </Field>
-          <Field label="Max RR reached">
-            <Input
-              type="number" step="0.01"
-              value={t.maxRr}
-              onChange={(e) => update({ maxRr: Number(e.target.value) })}
-              className="bg-black/40 border-terminal-border"
+          <Field label="Notes">
+            <textarea
+              value={t.notes ?? ""}
+              onChange={(e) => update({ notes: e.target.value })}
+              rows={2}
+              className="w-full rounded-md bg-black/40 border border-terminal-border p-2 text-sm"
             />
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-2">
-          <PasteSlot
-            label="BEFORE"
-            image={t.beforeImg}
-            onChange={(p) => update({ beforeImg: p })}
-            focused={focused === "before"}
-            onFocus={() => setFocused("before")}
-            className="aspect-video"
-          />
-          <PasteSlot
-            label="AFTER"
-            image={t.afterImg}
-            onChange={(p) => update({ afterImg: p })}
-            focused={focused === "after"}
-            onFocus={() => setFocused("after")}
-            className="aspect-video"
-          />
-        </div>
-
-        <Field label="Notes">
-          <textarea
-            value={t.notes ?? ""}
-            onChange={(e) => update({ notes: e.target.value })}
-            rows={2}
-            className="w-full rounded-md bg-black/40 border border-terminal-border p-2 text-sm"
-          />
-        </Field>
-
-        <div className="flex justify-between pt-2">
+        {/* Sticky Footer */}
+        <div className="flex justify-between items-center px-5 py-3 border-t border-terminal-border bg-[#0D1117] shrink-0">
           {onDelete ? (
             <button
               onClick={del}
