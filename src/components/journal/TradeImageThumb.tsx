@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
 import { getChartUrl } from "@/lib/journal";
-import { ImageIcon, X } from "lucide-react";
+import { ImageIcon } from "lucide-react";
+import { Lightbox, type LightboxImage } from "./Lightbox";
 
-export function TradeImageThumb({ path, label }: { path?: string; label: string }) {
+interface Props {
+  path?: string;
+  label: string;
+  /** Optional sibling image for arrow-key navigation in the lightbox */
+  pair?: { path?: string; label: string };
+  /** Caption prefix shown in the lightbox (e.g. "Trade #01") */
+  captionPrefix?: string;
+}
+
+export function TradeImageThumb({ path, label, pair, captionPrefix }: Props) {
   const [url, setUrl] = useState("");
-  const [zoom, setZoom] = useState(false);
+  const [pairUrl, setPairUrl] = useState("");
+  const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -12,6 +23,13 @@ export function TradeImageThumb({ path, label }: { path?: string; label: string 
     getChartUrl(path).then((u) => { if (!cancelled) setUrl(u); }).catch(() => {});
     return () => { cancelled = true; };
   }, [path]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!pair?.path) { setPairUrl(""); return; }
+    getChartUrl(pair.path).then((u) => { if (!cancelled) setPairUrl(u); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [pair?.path]);
 
   if (!path) {
     return (
@@ -21,27 +39,31 @@ export function TradeImageThumb({ path, label }: { path?: string; label: string 
     );
   }
 
+  const openLightbox = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const prefix = captionPrefix ? `${captionPrefix} — ` : "";
+    const images: LightboxImage[] = [{ url, caption: `${prefix}${label}` }];
+    if (pair?.path && pairUrl) {
+      images.push({ url: pairUrl, caption: `${prefix}${pair.label}` });
+    }
+    setLightbox({ images, index: 0 });
+  };
+
   return (
     <>
       <button
-        onClick={(e) => { e.stopPropagation(); setZoom(true); }}
+        onClick={openLightbox}
         className="w-12 h-9 rounded border border-terminal-border overflow-hidden hover:border-neon-cyan transition"
       >
         {url && <img src={url} alt={label} className="w-full h-full object-cover" />}
       </button>
-      {zoom && (
-        <div
-          onClick={() => setZoom(false)}
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-8 cursor-zoom-out"
-        >
-          <button className="absolute top-4 right-4 text-white/70 hover:text-white">
-            <X className="w-6 h-6" />
-          </button>
-          <div className="absolute top-4 left-4 px-2 py-1 rounded bg-black/60 text-[10px] tracking-widest text-neon-cyan font-bold">
-            {label}
-          </div>
-          {url && <img src={url} alt={label} className="max-w-full max-h-full object-contain" />}
-        </div>
+      {lightbox && (
+        <Lightbox
+          images={lightbox.images}
+          index={lightbox.index}
+          onClose={() => setLightbox(null)}
+          onIndexChange={(i) => setLightbox((s) => (s ? { ...s, index: i } : s))}
+        />
       )}
     </>
   );
