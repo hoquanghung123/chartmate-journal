@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      journal_entries: {
+        Row: {
+          asset: string
+          created_at: string
+          daily_bias: Database["public"]["Enums"]["bias_type"]
+          daily_correct: boolean
+          daily_img: string | null
+          date: string
+          h4: Json
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          weekly_bias: Database["public"]["Enums"]["bias_type"]
+          weekly_correct: boolean
+          weekly_img: string | null
+        }
+        Insert: {
+          asset: string
+          created_at?: string
+          daily_bias?: Database["public"]["Enums"]["bias_type"]
+          daily_correct?: boolean
+          daily_img?: string | null
+          date: string
+          h4?: Json
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          weekly_bias?: Database["public"]["Enums"]["bias_type"]
+          weekly_correct?: boolean
+          weekly_img?: string | null
+        }
+        Update: {
+          asset?: string
+          created_at?: string
+          daily_bias?: Database["public"]["Enums"]["bias_type"]
+          daily_correct?: boolean
+          daily_img?: string | null
+          date?: string
+          h4?: Json
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          weekly_bias?: Database["public"]["Enums"]["bias_type"]
+          weekly_correct?: boolean
+          weekly_img?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +73,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      bias_type: "bullish" | "bearish" | "consolidation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +200,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      bias_type: ["bullish", "bearish", "consolidation"],
+    },
   },
 } as const
