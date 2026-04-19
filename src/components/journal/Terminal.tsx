@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, ChevronsRight, Filter, Activity, Terminal as TerminalIcon } from "lucide-react";
+import { Plus, ChevronsRight, Filter, Activity, Terminal as TerminalIcon, LogOut } from "lucide-react";
 import {
   ASSETS, type DayEntry, type SlotKind,
-  loadEntries, saveEntries, monthKey, uid,
+  fetchEntries, upsertEntry, deleteEntry, monthKey, uid,
 } from "@/lib/journal";
+import { supabase } from "@/integrations/supabase/client";
 import { DayColumn } from "./DayColumn";
 import { EditDayModal } from "./EditDayModal";
+import { AuthGate } from "./AuthGate";
+import { toast } from "sonner";
 
 const newEntry = (asset: string): DayEntry => ({
   id: uid(),
@@ -18,7 +21,7 @@ const newEntry = (asset: string): DayEntry => ({
   h4: {},
 });
 
-export function Terminal() {
+function TerminalInner() {
   const [entries, setEntries] = useState<DayEntry[]>([]);
   const [asset, setAsset] = useState<string>("ALL");
   const [month, setMonth] = useState<string>("ALL");
@@ -26,10 +29,10 @@ export function Terminal() {
   const [focusedSlot, setFocusedSlot] = useState<{ id: string; slot: SlotKind } | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setEntries(loadEntries()); }, []);
-  useEffect(() => { saveEntries(entries); }, [entries]);
+  useEffect(() => {
+    fetchEntries().then(setEntries).catch((e) => toast.error(e.message));
+  }, []);
 
-  // unfocus on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
@@ -63,20 +66,37 @@ export function Terminal() {
     if (el) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
   };
 
-  const addEntry = () => {
+  const upsert = async (e: DayEntry) => {
+    setEntries((p) => (p.find((x) => x.id === e.id) ? p.map((x) => (x.id === e.id ? e : x)) : [...p, e]));
+    try {
+      await upsertEntry(e);
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const remove = async (id: string) => {
+    setEntries((p) => p.filter((x) => x.id !== id));
+    try {
+      await deleteEntry(id);
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const addEntry = async () => {
     const e = newEntry(asset === "ALL" ? "XAUUSD" : asset);
-    setEntries((p) => [...p, e]);
+    await upsert(e);
     setEditing(e);
     setTimeout(jumpRight, 100);
   };
 
-  const upsert = (e: DayEntry) =>
-    setEntries((p) => (p.find((x) => x.id === e.id) ? p.map((x) => (x.id === e.id ? e : x)) : [...p, e]));
-  const remove = (id: string) => setEntries((p) => p.filter((x) => x.id !== id));
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="min-h-screen grid-bg">
-      {/* Top Nav */}
       <header className="sticky top-0 z-30 glass-strong border-b border-terminal-border">
         <div className="flex items-center gap-4 px-4 py-2.5 flex-wrap">
           <div className="flex items-center gap-2">
@@ -122,9 +142,14 @@ export function Terminal() {
             className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold tracking-widest border border-terminal-border rounded hover:border-neon-cyan/60 hover:text-neon-cyan transition-all">
             JUMP <ChevronsRight className="w-3.5 h-3.5" />
           </button>
+
+          <button onClick={signOut}
+            title="Sign out"
+            className="flex items-center gap-1 px-2 py-1.5 text-xs border border-terminal-border rounded hover:border-neon-red/60 hover:text-neon-red transition-all">
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Stats strip */}
         <div className="flex items-center gap-6 px-4 py-1.5 border-t border-terminal-border bg-black/30 text-[10px] tracking-widest">
           <Stat label="DAYS" value={stats.days} />
           <Stat label="CHECKS" value={`${stats.correct}/${stats.total}`} />
@@ -135,7 +160,6 @@ export function Terminal() {
         </div>
       </header>
 
-      {/* Timeline */}
       <main className="px-4 py-5">
         {filtered.length === 0 ? (
           <Empty onAdd={addEntry} />
@@ -167,6 +191,10 @@ export function Terminal() {
       )}
     </div>
   );
+}
+
+export function Terminal() {
+  return <AuthGate>{() => <TerminalInner />}</AuthGate>;
 }
 
 function Stat({ label, value, accent }: { label: string; value: string | number; accent?: "green" | "amber" }) {
