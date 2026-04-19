@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, ChevronsRight, Filter, Activity, Terminal as TerminalIcon } from "lucide-react";
 import {
-  ASSETS, type DayEntry, type SlotKind,
+  type DayEntry, type SlotKind,
   fetchEntries, upsertEntry, deleteEntry, monthKey, uid,
 } from "@/lib/journal";
+import { useSymbols } from "@/lib/symbols";
 import { DayColumn } from "./DayColumn";
 import { EditDayModal } from "./EditDayModal";
 import { onBiasFocus } from "@/lib/nav-bus";
@@ -21,6 +22,8 @@ const newEntry = (asset: string): DayEntry => ({
 });
 
 export function JournalView() {
+  const { data: assetList = [] } = useSymbols();
+  const ASSETS = useMemo(() => assetList.map((s) => s.name), [assetList]);
   const [entries, setEntries] = useState<DayEntry[]>([]);
   const [asset, setAsset] = useState<string>("ALL");
   const [month, setMonth] = useState<string>("ALL");
@@ -114,7 +117,8 @@ export function JournalView() {
   };
 
   const addEntry = async () => {
-    const e = newEntry(asset === "ALL" ? "XAUUSD" : asset);
+    const fallback = ASSETS[0] ?? "XAUUSD";
+    const e = newEntry(asset === "ALL" ? fallback : asset);
     await upsert(e);
     setEditing(e);
     setTimeout(jumpRight, 100);

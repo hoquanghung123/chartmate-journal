@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { computeOutcome, outcomeStyle, SYMBOLS, type Trade } from "@/lib/trades";
+import { computeOutcome, outcomeStyle, type Trade } from "@/lib/trades";
+import { useSymbols } from "@/lib/symbols";
 import { fetchEntries, type DayEntry, ddmm } from "@/lib/journal";
 import { PasteSlot } from "./PasteSlot";
 import { Trash2, Save } from "lucide-react";
@@ -21,6 +22,8 @@ export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
   const [focused, setFocused] = useState<"before" | "after" | null>(null);
   const [busy, setBusy] = useState(false);
   const [biasEntries, setBiasEntries] = useState<DayEntry[]>([]);
+  const { data: symbols = [] } = useSymbols();
+  const SYMBOLS = symbols.map((s) => s.name);
 
   useEffect(() => { setT(trade); }, [trade]);
 
