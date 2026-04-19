@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ImageIcon, ClipboardPaste, Loader2 } from "lucide-react";
+import { ImageIcon, ClipboardPaste, Loader2, Maximize2 } from "lucide-react";
 import { deleteChartImage, getChartUrl, uploadChartImage } from "@/lib/journal";
 import { toast } from "sonner";
+import { Lightbox } from "./Lightbox";
 
 interface Props {
   label: string;
