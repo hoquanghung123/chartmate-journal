@@ -3,9 +3,9 @@
 type Listener = (entryId: string) => void;
 const listeners = new Set<Listener>();
 
-export function onBiasFocus(fn: Listener) {
+export function onBiasFocus(fn: Listener): () => void {
   listeners.add(fn);
-  return () => listeners.delete(fn);
+  return () => { listeners.delete(fn); };
 }
 
 export function focusBiasEntry(entryId: string) {
