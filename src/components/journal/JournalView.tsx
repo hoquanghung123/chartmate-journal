@@ -6,6 +6,7 @@ import {
 } from "@/lib/journal";
 import { DayColumn } from "./DayColumn";
 import { EditDayModal } from "./EditDayModal";
+import { onBiasFocus } from "@/lib/nav-bus";
 import { toast } from "sonner";
 
 const newEntry = (asset: string): DayEntry => ({
