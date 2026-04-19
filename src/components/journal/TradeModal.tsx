@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { computeOutcome, outcomeStyle, SYMBOLS, type Trade } from "@/lib/trades";
+import { fetchEntries, type DayEntry, ddmm } from "@/lib/journal";
 import { PasteSlot } from "./PasteSlot";
 import { Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
