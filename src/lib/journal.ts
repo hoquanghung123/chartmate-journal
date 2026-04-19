@@ -139,3 +139,52 @@ export function fileToDataURL(file: File): Promise<string> {
     r.readAsDataURL(file);
   });
 }
+
+const BUCKET = "journal-charts";
+
+/** Upload a data URL or File to Storage. Returns a public-style signed/url path stored in DB. */
+export async function uploadChartImage(input: string | File): Promise<string> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Not authenticated");
+
+  let blob: Blob;
+  let ext = "png";
+  if (typeof input === "string") {
+    // data URL
+    const m = input.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+    if (!m) throw new Error("Invalid image data");
+    const mime = m[1];
+    ext = mime.split("/")[1].replace("jpeg", "jpg");
+    const bin = atob(m[2]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    blob = new Blob([bytes], { type: mime });
+  } else {
+    blob = input;
+    ext = (input.type.split("/")[1] || "png").replace("jpeg", "jpg");
+  }
+
+  const path = `${u.user.id}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
+    contentType: blob.type,
+    upsert: false,
+  });
+  if (error) throw error;
+  return path;
+}
+
+/** Resolve a stored path into a temporary signed URL for display. */
+export async function getChartUrl(path: string): Promise<string> {
+  if (!path) return "";
+  if (path.startsWith("data:") || path.startsWith("http")) return path;
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(path, 60 * 60); // 1 hour
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function deleteChartImage(path?: string): Promise<void> {
+  if (!path || path.startsWith("data:") || path.startsWith("http")) return;
+  await supabase.storage.from(BUCKET).remove([path]);
+}
