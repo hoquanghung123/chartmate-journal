@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { computeOutcome, outcomeStyle, SYMBOLS, type Trade } from "@/lib/trades";
+import { fetchEntries, type DayEntry, ddmm } from "@/lib/journal";
 import { PasteSlot } from "./PasteSlot";
 import { Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -19,8 +20,22 @@ export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
   const [t, setT] = useState<Trade | null>(trade);
   const [focused, setFocused] = useState<"before" | "after" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [biasEntries, setBiasEntries] = useState<DayEntry[]>([]);
 
   useEffect(() => { setT(trade); }, [trade]);
+
+  // Load all journal entries once when modal opens
+  useEffect(() => {
+    if (!open) return;
+    fetchEntries().then(setBiasEntries).catch(() => {});
+  }, [open]);
+
+  const filteredBias = useMemo(
+    () => biasEntries
+      .filter((e) => !t?.symbol || e.asset === t.symbol)
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [biasEntries, t?.symbol],
+  );
 
   if (!t) return null;
 
@@ -123,13 +138,22 @@ export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
             </div>
           </Field>
 
-          <Field label="Bias entry ID (optional)">
-            <Input
+          <Field label={`Bias entry (${t.symbol})`}>
+            <select
               value={t.biasEntryId ?? ""}
               onChange={(e) => update({ biasEntryId: e.target.value || undefined })}
-              placeholder="link to bias entry"
-              className="bg-black/40 border-terminal-border"
-            />
+              className="h-9 w-full rounded-md bg-black/40 border border-terminal-border px-2 text-sm"
+            >
+              <option value="">— none —</option>
+              {filteredBias.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {ddmm(b.date)} — {b.dailyBias.charAt(0).toUpperCase() + b.dailyBias.slice(1)}
+                </option>
+              ))}
+              {filteredBias.length === 0 && (
+                <option value="" disabled>No {t.symbol} entries</option>
+              )}
+            </select>
           </Field>
 
           <Field label="Gross PnL">

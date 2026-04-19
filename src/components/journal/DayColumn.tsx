@@ -18,7 +18,7 @@ export function DayColumn({ entry, focusedSlot, setFocus, onUpdate, onEdit }: Pr
   const focus = (slot: SlotKind) => setFocus({ id: entry.id, slot });
 
   return (
-    <div className="glass rounded-lg w-[260px] shrink-0 flex flex-col overflow-hidden">
+    <div id={`bias-entry-${entry.id}`} className="glass rounded-lg w-[260px] shrink-0 flex flex-col overflow-hidden scroll-mx-6 transition-shadow data-[flash=true]:shadow-[0_0_0_2px_var(--neon-cyan),0_0_30px_var(--neon-cyan)]">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-terminal-border bg-terminal-bg/60">
         <div className="flex items-baseline gap-2">

@@ -6,6 +6,7 @@ import {
 } from "@/lib/journal";
 import { DayColumn } from "./DayColumn";
 import { EditDayModal } from "./EditDayModal";
+import { onBiasFocus } from "@/lib/nav-bus";
 import { toast } from "sonner";
 
 const newEntry = (asset: string): DayEntry => ({
@@ -38,6 +39,20 @@ export function JournalView() {
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    return onBiasFocus((entryId) => {
+      setAsset("ALL");
+      setMonth("ALL");
+      setTimeout(() => {
+        const el = document.getElementById(`bias-entry-${entryId}`);
+        if (!el) { toast.error("Bias entry not found"); return; }
+        el.scrollIntoView({ behavior: "smooth", inline: "center", block: "center" });
+        el.setAttribute("data-flash", "true");
+        setTimeout(() => el.removeAttribute("data-flash"), 2000);
+      }, 80);
+    });
   }, []);
 
   const months = useMemo(() => {
