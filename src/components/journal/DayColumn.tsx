@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Edit3, Check } from "lucide-react";
 import type { DayEntry, Session, SlotKind } from "@/lib/journal";
-import { biasColor, biasLabel, ddmm, weekdayOf } from "@/lib/journal";
+import { biasStyle, biasLabel, ddmm, weekdayOf } from "@/lib/journal";
 import { PasteSlot } from "./PasteSlot";
 
 interface Props {
