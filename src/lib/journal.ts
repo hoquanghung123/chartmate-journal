@@ -83,8 +83,24 @@ export async function upsertEntry(e: DayEntry): Promise<void> {
 }
 
 export async function deleteEntry(id: string): Promise<void> {
+  // Fetch the row first so we can clean up its images from Storage.
+  const { data: row } = await supabase
+    .from("journal_entries")
+    .select("weekly_img, daily_img, h4")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await supabase.from("journal_entries").delete().eq("id", id);
   if (error) throw error;
+
+  if (row) {
+    const h4 = (row.h4 ?? {}) as { ASIA?: string; LDN?: string; NY?: string };
+    const paths = [row.weekly_img, row.daily_img, h4.ASIA, h4.LDN, h4.NY]
+      .filter((p): p is string => !!p && !p.startsWith("data:") && !p.startsWith("http"));
+    if (paths.length) {
+      await supabase.storage.from(BUCKET).remove(paths).catch(() => {});
+    }
+  }
 }
 
 // ---- Helpers ----
