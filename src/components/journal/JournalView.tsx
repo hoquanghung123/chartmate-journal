@@ -26,6 +26,7 @@ export function JournalView() {
   const [month, setMonth] = useState<string>("ALL");
   const [editing, setEditing] = useState<DayEntry | null>(null);
   const [focusedSlot, setFocusedSlot] = useState<{ id: string; slot: SlotKind } | null>(null);
+  const [pendingFocusId, setPendingFocusId] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,19 +42,42 @@ export function JournalView() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Subscribe to smart-link focus events from Trade Log
   useEffect(() => {
     return onBiasFocus((entryId) => {
       setAsset("ALL");
       setMonth("ALL");
-      setTimeout(() => {
-        const el = document.getElementById(`bias-entry-${entryId}`);
-        if (!el) { toast.error("Bias entry not found"); return; }
-        el.scrollIntoView({ behavior: "smooth", inline: "center", block: "center" });
-        el.setAttribute("data-flash", "true");
-        setTimeout(() => el.removeAttribute("data-flash"), 2000);
-      }, 80);
+      setPendingFocusId(entryId);
     });
   }, []);
+
+  // Poll for the target element until it appears (data may still be loading,
+  // or filters/render may not have flushed yet). Up to ~3 seconds.
+  useEffect(() => {
+    if (!pendingFocusId) return;
+    let attempts = 0;
+    let raf = 0;
+    const tick = () => {
+      const el = document.getElementById(`bias-entry-${pendingFocusId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", inline: "center", block: "center" });
+        el.classList.add("bias-flash");
+        setTimeout(() => el.classList.remove("bias-flash"), 2200);
+        setPendingFocusId(null);
+        return;
+      }
+      attempts += 1;
+      if (attempts > 30) { // ~3s at 100ms
+        toast.error("Bias entry not found");
+        setPendingFocusId(null);
+        return;
+      }
+      raf = window.setTimeout(tick, 100) as unknown as number;
+    };
+    tick();
+    return () => { if (raf) clearTimeout(raf); };
+  }, [pendingFocusId, entries]);
+
 
   const months = useMemo(() => {
     const set = new Set(entries.map((e) => monthKey(e.date)));
