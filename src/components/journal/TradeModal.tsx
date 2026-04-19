@@ -20,8 +20,22 @@ export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
   const [t, setT] = useState<Trade | null>(trade);
   const [focused, setFocused] = useState<"before" | "after" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [biasEntries, setBiasEntries] = useState<DayEntry[]>([]);
 
   useEffect(() => { setT(trade); }, [trade]);
+
+  // Load all journal entries once when modal opens
+  useEffect(() => {
+    if (!open) return;
+    fetchEntries().then(setBiasEntries).catch(() => {});
+  }, [open]);
+
+  const filteredBias = useMemo(
+    () => biasEntries
+      .filter((e) => !t?.symbol || e.asset === t.symbol)
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [biasEntries, t?.symbol],
+  );
 
   if (!t) return null;
 
