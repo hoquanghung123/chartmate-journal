@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, Trash2, Save } from "lucide-react";
 import type { Bias, DayEntry, Session } from "@/lib/journal";
-import { biasColor, weekdayOf } from "@/lib/journal";
+import { biasStyle, biasLabel, weekdayOf } from "@/lib/journal";
 import { useSymbols } from "@/lib/symbols";
 import { PasteSlot } from "./PasteSlot";
 
@@ -145,12 +145,23 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function BiasPicker({ value, onChange }: { value: Bias; onChange: (v: Bias) => void }) {
   return (
     <div className="flex flex-col gap-1.5">
-      {BIASES.map((b) => (
-        <button key={b} onClick={() => onChange(b)}
-          className={`px-3 py-1.5 rounded border text-[10px] font-bold tracking-widest uppercase transition-all ${value === b ? biasColor(b) + " ring-1 ring-current" : "border-terminal-border text-muted-foreground hover:text-foreground"}`}>
-          {b}
-        </button>
-      ))}
+      {BIASES.map((b) => {
+        const active = value === b;
+        return (
+          <button
+            key={b}
+            onClick={() => onChange(b)}
+            className="px-3 py-1.5 rounded border text-[10px] font-extrabold tracking-widest uppercase transition-all"
+            style={
+              active
+                ? { ...biasStyle(b), borderColor: "transparent" }
+                : { borderColor: "var(--terminal-border)", color: "var(--muted-foreground)", fontFamily: "'JetBrains Mono', ui-monospace, monospace" }
+            }
+          >
+            {biasLabel(b)}
+          </button>
+        );
+      })}
     </div>
   );
 }

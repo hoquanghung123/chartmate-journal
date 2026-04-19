@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Bias = "bullish" | "bearish" | "consolidation";
@@ -124,11 +125,24 @@ export function uid() {
   return crypto.randomUUID();
 }
 
-export function biasColor(b: Bias) {
-  // Outlined style: dark translucent bg, colored border + text for max contrast on dark UI
-  if (b === "bullish") return "bg-black/70 text-bias-bull border-bias-bull";
-  if (b === "bearish") return "bg-black/70 text-bias-bear border-bias-bear";
-  return "bg-black/70 text-bias-cons border-bias-cons";
+export function biasBgHex(b: Bias) {
+  if (b === "bullish") return "#4ADE80";
+  if (b === "bearish") return "#F87171";
+  return "#FFFFFF";
+}
+
+export function biasStyle(b: Bias): CSSProperties {
+  return {
+    backgroundColor: biasBgHex(b),
+    color: "#000",
+    borderRadius: "4px",
+    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+  };
+}
+
+export function biasColor(_b: Bias) {
+  // Kept for backwards compat; styling now driven by biasStyle().
+  return "";
 }
 
 export function biasLabel(b: Bias) {
