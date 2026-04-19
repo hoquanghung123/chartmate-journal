@@ -221,8 +221,18 @@ export function TradeLog() {
                     {cols.images && (
                       <td className="p-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-1.5">
-                          <TradeImageThumb path={t.beforeImg} label="BEFORE" />
-                          <TradeImageThumb path={t.afterImg} label="AFTER" />
+                          <TradeImageThumb
+                            path={t.beforeImg}
+                            label="BEFORE"
+                            pair={{ path: t.afterImg, label: "AFTER" }}
+                            captionPrefix={`Trade #${String(i + 1).padStart(2, "0")} • ${t.symbol}`}
+                          />
+                          <TradeImageThumb
+                            path={t.afterImg}
+                            label="AFTER"
+                            pair={{ path: t.beforeImg, label: "BEFORE" }}
+                            captionPrefix={`Trade #${String(i + 1).padStart(2, "0")} • ${t.symbol}`}
+                          />
                         </div>
                       </td>
                     )}
