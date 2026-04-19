@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ImageIcon, ClipboardPaste, Loader2 } from "lucide-react";
-import { getChartUrl, uploadChartImage } from "@/lib/journal";
+import { deleteChartImage, getChartUrl, uploadChartImage } from "@/lib/journal";
 import { toast } from "sonner";
 
 interface Props {
@@ -33,7 +33,9 @@ export function PasteSlot({ label, image, onChange, focused, onFocus, className,
     setBusy(true);
     try {
       const path = await uploadChartImage(file);
+      const old = image;
       onChange(path);
+      if (old) deleteChartImage(old).catch(() => {});
     } catch (e: any) {
       toast.error(e.message ?? "Upload failed");
     } finally {
@@ -45,7 +47,9 @@ export function PasteSlot({ label, image, onChange, focused, onFocus, className,
     setBusy(true);
     try {
       const path = await uploadChartImage(dataUrl);
+      const old = image;
       onChange(path);
+      if (old) deleteChartImage(old).catch(() => {});
     } catch (e: any) {
       toast.error(e.message ?? "Upload failed");
     } finally {
