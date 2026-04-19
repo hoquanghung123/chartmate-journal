@@ -1,224 +1,90 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, ChevronsRight, Filter, Activity, Terminal as TerminalIcon, LogOut } from "lucide-react";
-import {
-  ASSETS, type DayEntry, type SlotKind,
-  fetchEntries, upsertEntry, deleteEntry, monthKey, uid,
-} from "@/lib/journal";
+import { useState } from "react";
+import { LayoutDashboard, Crosshair, FileText, LogOut, Terminal as TerminalIcon, Construction } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { DayColumn } from "./DayColumn";
-import { EditDayModal } from "./EditDayModal";
 import { AuthGate } from "./AuthGate";
-import { toast } from "sonner";
+import { JournalView } from "./JournalView";
 
-const newEntry = (asset: string): DayEntry => ({
-  id: uid(),
-  date: new Date().toISOString().slice(0, 10),
-  asset,
-  weeklyBias: "consolidation",
-  weeklyCorrect: false,
-  dailyBias: "consolidation",
-  dailyCorrect: false,
-  h4: {},
-});
+type Page = "dashboard" | "bias" | "trades";
 
-function TerminalInner() {
-  const [entries, setEntries] = useState<DayEntry[]>([]);
-  const [asset, setAsset] = useState<string>("ALL");
-  const [month, setMonth] = useState<string>("ALL");
-  const [editing, setEditing] = useState<DayEntry | null>(null);
-  const [focusedSlot, setFocusedSlot] = useState<{ id: string; slot: SlotKind } | null>(null);
-  const scrollerRef = useRef<HTMLDivElement>(null);
+const NAV: { id: Page; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "bias", label: "Bias Expect", icon: Crosshair },
+  { id: "trades", label: "Trade Log", icon: FileText },
+];
 
-  useEffect(() => {
-    fetchEntries().then(setEntries).catch((e) => toast.error(e.message));
-  }, []);
+function Shell() {
+  const [page, setPage] = useState<Page>("bias");
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const t = e.target as HTMLElement;
-      if (!t.closest("[data-slot-root]")) setFocusedSlot(null);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const months = useMemo(() => {
-    const set = new Set(entries.map((e) => monthKey(e.date)));
-    return Array.from(set).sort();
-  }, [entries]);
-
-  const filtered = useMemo(() => {
-    return [...entries]
-      .filter((e) => (asset === "ALL" ? true : e.asset === asset))
-      .filter((e) => (month === "ALL" ? true : monthKey(e.date) === month))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }, [entries, asset, month]);
-
-  const stats = useMemo(() => {
-    const total = filtered.length * 2;
-    const correct = filtered.reduce((s, e) => s + (e.weeklyCorrect ? 1 : 0) + (e.dailyCorrect ? 1 : 0), 0);
-    const acc = total ? Math.round((correct / total) * 100) : 0;
-    return { days: filtered.length, correct, total, acc };
-  }, [filtered]);
-
-  const jumpRight = () => {
-    const el = scrollerRef.current;
-    if (el) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
-  };
-
-  const upsert = async (e: DayEntry) => {
-    setEntries((p) => (p.find((x) => x.id === e.id) ? p.map((x) => (x.id === e.id ? e : x)) : [...p, e]));
-    try {
-      await upsertEntry(e);
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
-  const remove = async (id: string) => {
-    setEntries((p) => p.filter((x) => x.id !== id));
-    try {
-      await deleteEntry(id);
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
-  const addEntry = async () => {
-    const e = newEntry(asset === "ALL" ? "XAUUSD" : asset);
-    await upsert(e);
-    setEditing(e);
-    setTimeout(jumpRight, 100);
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  const signOut = async () => { await supabase.auth.signOut(); };
 
   return (
-    <div className="min-h-screen grid-bg">
-      <header className="sticky top-0 z-30 glass-strong border-b border-terminal-border">
-        <div className="flex items-center gap-4 px-4 py-2.5 flex-wrap">
-          <div className="flex items-center gap-2">
-            <TerminalIcon className="w-5 h-5 text-neon-cyan text-glow-cyan" />
-            <h1 className="text-sm font-bold tracking-[0.3em] text-neon-cyan text-glow-cyan">ICT_JOURNAL</h1>
-            <span className="text-[10px] text-muted-foreground tracking-widest">// v1.0 TERMINAL</span>
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      <aside
+        className="fixed inset-y-0 left-0 z-40 w-[240px] flex flex-col border-r border-terminal-border"
+        style={{ background: "#0D131A" }}
+      >
+        <div className="px-5 py-5 border-b border-terminal-border flex items-center gap-2">
+          <TerminalIcon className="w-5 h-5 text-neon-cyan text-glow-cyan" />
+          <div>
+            <div className="text-sm font-bold tracking-[0.25em] text-neon-cyan text-glow-cyan">ICT_JOURNAL</div>
+            <div className="text-[9px] text-muted-foreground tracking-widest">// v1.0 TERMINAL</div>
           </div>
+        </div>
 
-          <button
-            type="button"
-            onClick={addEntry}
-            className="relative flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-[0.2em] bg-gradient-to-r from-neon-cyan/40 to-neon-cyan/20 text-neon-cyan border-2 border-neon-cyan rounded hover:from-neon-cyan/60 hover:to-neon-cyan/30 text-glow-cyan transition-all shadow-[0_0_18px_oklch(0.85_0.18_200/0.4)] hover:shadow-[0_0_28px_oklch(0.85_0.18_200/0.7)]"
-          >
-            <Plus className="w-4 h-4" strokeWidth={3} /> ADD DAY
-          </button>
-
-          <div className="h-6 w-px bg-terminal-border" />
-
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-[9px] text-muted-foreground tracking-widest mr-1">ASSET:</span>
-            <button onClick={() => setAsset("ALL")}
-              className={`px-2 py-1 text-[10px] font-bold tracking-widest rounded border transition-all ${asset === "ALL" ? "bg-neon-amber/20 text-neon-amber border-neon-amber/60" : "border-terminal-border text-muted-foreground hover:text-foreground"}`}>
-              ALL
-            </button>
-            {ASSETS.map((a) => (
-              <button key={a} onClick={() => setAsset(a)}
-                className={`px-2 py-1 text-[10px] font-bold tracking-widest rounded border transition-all ${asset === a ? "bg-neon-amber/20 text-neon-amber border-neon-amber/60" : "border-terminal-border text-muted-foreground hover:text-foreground"}`}>
-                {a}
+        <nav className="flex-1 p-3 space-y-1">
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            const active = page === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setPage(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-xs font-bold tracking-[0.18em] border transition-all ${
+                  active
+                    ? "bg-neon-cyan/15 text-neon-cyan border-neon-cyan/50 text-glow-cyan shadow-[0_0_18px_oklch(0.85_0.18_200/0.25)]"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="uppercase">{item.label}</span>
               </button>
-            ))}
-          </div>
+            );
+          })}
+        </nav>
 
-          <label className="flex items-center gap-1.5 ml-auto">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-            <select value={month} onChange={(e) => setMonth(e.target.value)}
-              className="bg-terminal-bg border border-terminal-border rounded px-2 py-1 text-xs outline-none">
-              <option value="ALL">All months</option>
-              {months.map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </label>
-
-          <button onClick={jumpRight}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold tracking-widest border border-terminal-border rounded hover:border-neon-cyan/60 hover:text-neon-cyan transition-all">
-            JUMP <ChevronsRight className="w-3.5 h-3.5" />
-          </button>
-
-          <button onClick={signOut}
-            title="Sign out"
-            className="flex items-center gap-1 px-2 py-1.5 text-xs border border-terminal-border rounded hover:border-neon-red/60 hover:text-neon-red transition-all">
-            <LogOut className="w-3.5 h-3.5" />
+        <div className="p-3 border-t border-terminal-border">
+          <button
+            onClick={signOut}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-xs font-bold tracking-widest border border-terminal-border text-muted-foreground hover:text-neon-red hover:border-neon-red/60 transition-all"
+          >
+            <LogOut className="w-3.5 h-3.5" /> SIGN OUT
           </button>
         </div>
+      </aside>
 
-        <div className="flex items-center gap-6 px-4 py-1.5 border-t border-terminal-border bg-black/30 text-[10px] tracking-widest">
-          <Stat label="DAYS" value={stats.days} />
-          <Stat label="CHECKS" value={`${stats.correct}/${stats.total}`} />
-          <Stat label="ACC" value={`${stats.acc}%`} accent={stats.acc >= 60 ? "green" : "amber"} />
-          <span className="ml-auto flex items-center gap-1.5 text-neon-green">
-            <Activity className="w-3 h-3 animate-pulse" /> LIVE
-          </span>
-        </div>
-      </header>
+      {/* Main */}
+      <div className="flex-1 ml-[240px] min-w-0">
+        {page === "bias" && <JournalView />}
+        {page === "dashboard" && <UnderConstruction title="DASHBOARD" />}
+        {page === "trades" && <UnderConstruction title="TRADE LOG" />}
+      </div>
+    </div>
+  );
+}
 
-      <main className="px-4 py-5">
-        {filtered.length === 0 ? (
-          <Empty onAdd={addEntry} />
-        ) : (
-          <div ref={scrollerRef} data-slot-root className="overflow-x-auto scrollbar-terminal pb-4">
-            <div className="flex gap-3 min-w-min items-start">
-              {filtered.map((e) => (
-                <DayColumn
-                  key={e.id}
-                  entry={e}
-                  focusedSlot={focusedSlot}
-                  setFocus={setFocusedSlot}
-                  onUpdate={upsert}
-                  onEdit={setEditing}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </main>
-
-      {editing && (
-        <EditDayModal
-          entry={editing}
-          onSave={upsert}
-          onDelete={remove}
-          onClose={() => setEditing(null)}
-        />
-      )}
+function UnderConstruction({ title }: { title: string }) {
+  return (
+    <div className="min-h-screen grid-bg flex items-center justify-center p-8">
+      <div className="glass rounded-lg p-12 text-center max-w-md">
+        <Construction className="w-12 h-12 mx-auto text-neon-amber mb-4" />
+        <h2 className="text-xl font-bold tracking-[0.3em] text-neon-amber text-glow-cyan">{title}</h2>
+        <p className="text-xs text-muted-foreground mt-2 tracking-widest">// UNDER CONSTRUCTION</p>
+      </div>
     </div>
   );
 }
 
 export function Terminal() {
-  return <AuthGate>{() => <TerminalInner />}</AuthGate>;
-}
-
-function Stat({ label, value, accent }: { label: string; value: string | number; accent?: "green" | "amber" }) {
-  const color = accent === "green" ? "text-neon-green" : accent === "amber" ? "text-neon-amber" : "text-foreground";
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={`font-bold ${color}`}>{value}</span>
-    </span>
-  );
-}
-
-function Empty({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div className="glass rounded-lg p-12 text-center max-w-xl mx-auto mt-12">
-      <TerminalIcon className="w-10 h-10 mx-auto text-neon-cyan/60 mb-3" />
-      <h2 className="text-lg font-bold tracking-widest text-neon-cyan text-glow-cyan">NO ENTRIES</h2>
-      <p className="text-xs text-muted-foreground mt-1 mb-4 tracking-wide">
-        // Initialize your journal by adding your first trading day.
-      </p>
-      <button onClick={onAdd}
-        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold tracking-widest bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/60 rounded hover:bg-neon-cyan/30 text-glow-cyan">
-        <Plus className="w-3.5 h-3.5" /> ADD FIRST DAY
-      </button>
-    </div>
-  );
+  return <AuthGate>{() => <Shell />}</AuthGate>;
 }
