@@ -125,9 +125,10 @@ export function uid() {
 }
 
 export function biasColor(b: Bias) {
-  if (b === "bullish") return "bg-bias-bull/20 text-bias-bull border-bias-bull/40";
-  if (b === "bearish") return "bg-bias-bear/20 text-bias-bear border-bias-bear/40";
-  return "bg-bias-cons/20 text-bias-cons border-bias-cons/40";
+  // Outlined style: dark translucent bg, colored border + text for max contrast on dark UI
+  if (b === "bullish") return "bg-black/70 text-bias-bull border-bias-bull";
+  if (b === "bearish") return "bg-black/70 text-bias-bear border-bias-bear";
+  return "bg-black/70 text-bias-cons border-bias-cons";
 }
 
 export function biasLabel(b: Bias) {

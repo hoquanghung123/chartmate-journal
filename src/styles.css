@@ -74,9 +74,10 @@
   --neon-green: oklch(0.82 0.24 145);
   --neon-red: oklch(0.68 0.24 25);
   --neon-amber: oklch(0.82 0.18 75);
-  --bias-bull: oklch(0.78 0.20 150);
-  --bias-bear: oklch(0.65 0.24 25);
-  --bias-cons: oklch(0.65 0.02 250);
+  /* Bias tag colors — exact hex per spec: #4ADE80 / #F87171 / #E2E8F0 */
+  --bias-bull: #4ADE80;
+  --bias-bear: #F87171;
+  --bias-cons: #E2E8F0;
   --color-terminal-bg: var(--terminal-bg);
   --color-terminal-panel: var(--terminal-panel);
   --color-terminal-border: var(--terminal-border);

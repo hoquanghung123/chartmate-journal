@@ -108,13 +108,13 @@ function SlotWithBias({
       onChange={onImg}
       className="h-28"
     >
-      <span className={`bias-tag absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest border ${biasColor(bias)}`}>
+      <span className={`bias-tag absolute bottom-1 right-1 px-2 py-0.5 rounded text-[9px] font-mono font-extrabold uppercase tracking-[0.18em] border-2 shadow-lg ${biasColor(bias)}`}>
         {biasLabel(bias)}
       </span>
       <button
         onClick={(e) => { e.stopPropagation(); onToggle(); }}
         title="Mark accuracy correct"
-        className={`absolute bottom-1 right-1 w-5 h-5 rounded border border-terminal-border bg-black/70 flex items-center justify-center transition-all ${correct ? "neon-correct" : "text-muted-foreground hover:text-neon-cyan"}`}>
+        className={`absolute top-1 right-1 w-5 h-5 rounded border border-terminal-border bg-black/70 flex items-center justify-center transition-all ${correct ? "neon-correct" : "text-muted-foreground hover:text-neon-cyan"}`}>
         {correct && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
       </button>
     </PasteSlot>
