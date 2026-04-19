@@ -1,0 +1,237 @@
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { computeOutcome, outcomeStyle, SYMBOLS, type Trade } from "@/lib/trades";
+import { PasteSlot } from "./PasteSlot";
+import { Trash2, Save } from "lucide-react";
+import { toast } from "sonner";
+
+interface Props {
+  open: boolean;
+  trade: Trade | null;
+  onClose: () => void;
+  onSave: (t: Trade) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
+}
+
+export function TradeModal({ open, trade, onClose, onSave, onDelete }: Props) {
+  const [t, setT] = useState<Trade | null>(trade);
+  const [focused, setFocused] = useState<"before" | "after" | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { setT(trade); }, [trade]);
+
+  if (!t) return null;
+
+  const update = (patch: Partial<Trade>) => {
+    setT((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      // auto net = gross - fees
+      if ("grossPnl" in patch || "fees" in patch) {
+        next.netPnl = Number((next.grossPnl - next.fees).toFixed(2));
+      }
+      return next;
+    });
+  };
+
+  const outcome = computeOutcome(t.actualRr, t.maxRr, t.netPnl);
+
+  // datetime-local value
+  const dt = new Date(t.entryTime);
+  const dtLocal = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      await onSave(t);
+      toast.success("Trade saved");
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message ?? "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const del = async () => {
+    if (!onDelete) return;
+    if (!confirm("Delete this trade?")) return;
+    setBusy(true);
+    try {
+      await onDelete(t.id);
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message ?? "Delete failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-3xl bg-[#0D1117] border-terminal-border text-foreground">
+        <DialogHeader>
+          <DialogTitle className="text-neon-cyan tracking-[0.2em] text-sm font-bold flex items-center gap-3">
+            TRADE ENTRY
+            <span className={`px-2 py-0.5 rounded border text-[10px] tracking-widest ${outcomeStyle[outcome.color]}`}>
+              {outcome.label}
+            </span>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Entry time">
+            <Input
+              type="datetime-local"
+              value={dtLocal}
+              onChange={(e) => update({ entryTime: new Date(e.target.value).toISOString() })}
+              className="bg-black/40 border-terminal-border"
+            />
+          </Field>
+
+          <Field label="Symbol">
+            <select
+              value={t.symbol}
+              onChange={(e) => update({ symbol: e.target.value })}
+              className="h-9 w-full rounded-md bg-black/40 border border-terminal-border px-2 text-sm"
+            >
+              {SYMBOLS.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </Field>
+
+          <Field label="Side">
+            <div className="flex gap-2">
+              {(["buy", "sell"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => update({ side: s })}
+                  className={`flex-1 h-9 rounded-md border text-xs font-bold tracking-widest uppercase transition ${
+                    t.side === s
+                      ? s === "buy"
+                        ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400"
+                        : "bg-red-500/20 border-red-500/60 text-red-400"
+                      : "border-terminal-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Bias entry ID (optional)">
+            <Input
+              value={t.biasEntryId ?? ""}
+              onChange={(e) => update({ biasEntryId: e.target.value || undefined })}
+              placeholder="link to bias entry"
+              className="bg-black/40 border-terminal-border"
+            />
+          </Field>
+
+          <Field label="Gross PnL">
+            <Input
+              type="number" step="0.01"
+              value={t.grossPnl}
+              onChange={(e) => update({ grossPnl: Number(e.target.value) })}
+              className="bg-black/40 border-terminal-border"
+            />
+          </Field>
+          <Field label="Fees">
+            <Input
+              type="number" step="0.01"
+              value={t.fees}
+              onChange={(e) => update({ fees: Number(e.target.value) })}
+              className="bg-black/40 border-terminal-border"
+            />
+          </Field>
+          <Field label="Net PnL (auto)">
+            <Input
+              type="number" step="0.01"
+              value={t.netPnl}
+              onChange={(e) => update({ netPnl: Number(e.target.value) })}
+              className={`bg-black/40 border-terminal-border ${t.netPnl > 0 ? "text-emerald-400" : t.netPnl < 0 ? "text-red-400" : ""}`}
+            />
+          </Field>
+          <div />
+
+          <Field label="Actual RR achieved">
+            <Input
+              type="number" step="0.01"
+              value={t.actualRr}
+              onChange={(e) => update({ actualRr: Number(e.target.value) })}
+              className="bg-black/40 border-terminal-border"
+            />
+          </Field>
+          <Field label="Max RR reached">
+            <Input
+              type="number" step="0.01"
+              value={t.maxRr}
+              onChange={(e) => update({ maxRr: Number(e.target.value) })}
+              className="bg-black/40 border-terminal-border"
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <PasteSlot
+            label="BEFORE"
+            image={t.beforeImg}
+            onChange={(p) => update({ beforeImg: p })}
+            focused={focused === "before"}
+            onFocus={() => setFocused("before")}
+            className="aspect-video"
+          />
+          <PasteSlot
+            label="AFTER"
+            image={t.afterImg}
+            onChange={(p) => update({ afterImg: p })}
+            focused={focused === "after"}
+            onFocus={() => setFocused("after")}
+            className="aspect-video"
+          />
+        </div>
+
+        <Field label="Notes">
+          <textarea
+            value={t.notes ?? ""}
+            onChange={(e) => update({ notes: e.target.value })}
+            rows={2}
+            className="w-full rounded-md bg-black/40 border border-terminal-border p-2 text-sm"
+          />
+        </Field>
+
+        <div className="flex justify-between pt-2">
+          {onDelete ? (
+            <button
+              onClick={del}
+              disabled={busy}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-red-500/40 text-red-400 text-xs tracking-widest hover:bg-red-500/10"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> DELETE
+            </button>
+          ) : <div />}
+          <button
+            onClick={save}
+            disabled={busy}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded border border-neon-cyan/60 bg-neon-cyan/15 text-neon-cyan text-xs tracking-widest hover:bg-neon-cyan/25"
+          >
+            <Save className="w-3.5 h-3.5" /> SAVE
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
+}

@@ -3,6 +3,7 @@ import { LayoutDashboard, Crosshair, FileText, LogOut, Terminal as TerminalIcon,
 import { supabase } from "@/integrations/supabase/client";
 import { AuthGate } from "./AuthGate";
 import { JournalView } from "./JournalView";
+import { TradeLog } from "./TradeLog";
 
 type Page = "dashboard" | "bias" | "trades";
 
@@ -67,7 +68,7 @@ function Shell() {
       <div className="flex-1 ml-[240px] min-w-0">
         {page === "bias" && <JournalView />}
         {page === "dashboard" && <UnderConstruction title="DASHBOARD" />}
-        {page === "trades" && <UnderConstruction title="TRADE LOG" />}
+        {page === "trades" && <TradeLog />}
       </div>
     </div>
   );
