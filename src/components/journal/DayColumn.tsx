@@ -108,7 +108,7 @@ function SlotWithBias({
       onChange={onImg}
       className="h-28"
     >
-      <span className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest border ${biasColor(bias)}`}>
+      <span className={`bias-tag absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest border ${biasColor(bias)}`}>
         {biasLabel(bias)}
       </span>
       <button
