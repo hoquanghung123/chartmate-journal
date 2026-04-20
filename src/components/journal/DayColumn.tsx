@@ -26,7 +26,7 @@ export function DayColumn({ entry, focusedSlot, setFocus, onUpdate, onEdit }: Pr
           <span className="text-xs text-muted-foreground font-mono">{ddmm(entry.date)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[9px] text-neon-amber/80 font-bold tracking-wider">{entry.asset}</span>
+          <span className="text-neon-amber/80 font-bold tracking-wider text-base">{entry.asset}</span>
           <button onClick={() => onEdit(entry)} className="text-muted-foreground hover:text-neon-cyan transition-colors">
             <Edit3 className="w-3.5 h-3.5" />
           </button>
